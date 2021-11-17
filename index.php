@@ -20,21 +20,27 @@
 			header("Location: \signIn.php"); 
 			exit();
 		}
-	} 
+	} else if (!checkClient($_SESSION['login'], $_SESSION['password'])){
+		resetCurrSession();
+		header("Location: \signIn.php"); 
+		exit();
+	}
 	
-	$ipn_key = getClientIpn($_SESSION['login'], $_SESSION['password']);//'123456789';
-	$_SESSION['ipn'] =  $ipn_key;
-	#var_dump($ipn_key);
+	#$ipn_key = getClientIpn($_SESSION['login'], $_SESSION['password']);//'123456789';
+	$_SESSION['ipn'] =  getClientIpn($_SESSION['login'], $_SESSION['password']);
+	
 	$_SESSION['mail'] = getClientMail($_SESSION['login'], $_SESSION['password']);
 	echo(HEAD);
+	
 	echo ('
 		<div class="container">
+			
 			<ul class="nav nav-tabs nav-fill">
 				<!--<li class="nav-item">
 					<a class="nav-link" data-toggle="tab" href="\settings.php">Налаштування користувача</a>
 				</li>-->
 				<li class="nav-item">
-					<a class="nav-link active" data-toggle="tab" href="#tab1">Статус замовлень</a>
+					<a class="nav-link active" data-toggle="tab" href="#tab1">Замовлення</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" data-toggle="tab" href="#tab2">Повідомлення</a>
@@ -57,8 +63,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="tab-pane fade" id="tab2">
-		');
+	<div class="tab-pane fade" id="tab2">');
 			
 	showClientDialogs($_SESSION['ipn']);//'123456789'
 	

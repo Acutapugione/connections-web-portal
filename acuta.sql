@@ -2,8 +2,8 @@
 -- version 4.2.7.1
 -- http://www.phpmyadmin.net
 --
--- Хост: localhost
--- Время создания: Ноя 12 2021 г., 14:12
+-- Хост: 127.0.0.1
+-- Время создания: Ноя 17 2021 г., 15:16
 -- Версия сервера: 5.5.39
 -- Версия PHP: 5.4.31
 
@@ -28,7 +28,6 @@ SET time_zone = "+00:00";
 
 CREATE TABLE IF NOT EXISTS `conn_clients` (
 `id` int(11) unsigned NOT NULL,
-  `name` varchar(150) NOT NULL,
   `login` varchar(50) NOT NULL,
   `password` varchar(50) NOT NULL,
   `mail` varchar(50) NOT NULL,
@@ -39,8 +38,8 @@ CREATE TABLE IF NOT EXISTS `conn_clients` (
 -- Дамп данных таблицы `conn_clients`
 --
 
-INSERT INTO `conn_clients` (`id`, `name`, `login`, `password`, `mail`, `ipn_key`) VALUES
-(1, '', 'acuta', 'acuta', 'acuta.pugione@gmail.com', '123456789');
+INSERT INTO `conn_clients` (`id`, `login`, `password`, `mail`, `ipn_key`) VALUES
+(1, 'admin', 'admin', 'admin@admin.com', '123456789');
 
 -- --------------------------------------------------------
 
@@ -70,12 +69,21 @@ CREATE TABLE IF NOT EXISTS `conn_messages` (
 `id` int(11) unsigned NOT NULL,
   `message_type_id` int(11) unsigned NOT NULL,
   `src_id` int(11) unsigned NOT NULL,
-  `dest_id` int(11) unsigned DEFAULT NULL,
+  `order_id` int(11) unsigned DEFAULT NULL,
   `mess_tittle` varchar(150) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `mess_ctx` varchar(300) NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=21 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=20 ;
+
+--
+-- Дамп данных таблицы `conn_messages`
+--
+
+INSERT INTO `conn_messages` (`id`, `message_type_id`, `src_id`, `order_id`, `mess_tittle`, `created_at`, `deleted_at`, `mess_ctx`) VALUES
+(17, 1, 1, 1, 'asasvasv', '2021-11-17 13:51:33', NULL, 'test1'),
+(18, 1, 1, 2, '1sdagasgasg', '2021-11-17 14:14:00', NULL, 'Test2'),
+(19, 2, 1, NULL, 'asgsag', '2021-11-17 14:14:24', NULL, 'Test3');
 
 -- --------------------------------------------------------
 
@@ -107,17 +115,15 @@ CREATE TABLE IF NOT EXISTS `conn_orders` (
   `order_number` varchar(50) NOT NULL,
   `client_id` int(11) unsigned DEFAULT NULL,
   `contract_id` int(11) unsigned DEFAULT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=5 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=3 ;
 
 --
 -- Дамп данных таблицы `conn_orders`
 --
 
 INSERT INTO `conn_orders` (`id`, `order_number`, `client_id`, `contract_id`) VALUES
-(1, '21512512', 1, 1),
-(2, '1266126', 1, 1),
-(3, '171717', 1, 1),
-(4, '5125', 1, 1);
+(1, '12356', 1, 1),
+(2, '234567', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -129,33 +135,34 @@ CREATE TABLE IF NOT EXISTS `conn_steps` (
 `id` int(11) unsigned NOT NULL,
   `step_type_id` int(11) unsigned NOT NULL DEFAULT '1',
   `order_id` int(11) unsigned NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `payed_at` timestamp NULL DEFAULT NULL,
   `completed_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `price` decimal(10,2) unsigned NOT NULL DEFAULT '0.00',
   `nalog` decimal(10,2) unsigned NOT NULL DEFAULT '0.00',
   `total` decimal(10,2) unsigned DEFAULT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=7 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=47 ;
 
 --
 -- Дамп данных таблицы `conn_steps`
 --
 
 INSERT INTO `conn_steps` (`id`, `step_type_id`, `order_id`, `created_at`, `payed_at`, `completed_at`, `deleted_at`, `price`, `nalog`, `total`) VALUES
-(1, 2, 2, '2021-11-09 22:00:00', '2021-11-15 22:00:00', NULL, NULL, '52.00', '0.18', '9.36'),
-(2, 1, 2, '2021-11-09 22:00:00', '2021-11-08 22:00:00', '2021-11-09 22:00:00', NULL, '52000000.00', '0.18', '9360000.00'),
-(3, 3, 2, '2021-11-05 22:00:00', NULL, NULL, NULL, '52.00', '0.18', '9.36'),
-(4, 4, 2, '2021-11-09 22:00:00', NULL, NULL, NULL, '52000000.00', '0.18', '9360000.00'),
-(5, 4, 2, '2021-11-10 22:00:00', '2021-11-08 22:00:00', NULL, NULL, '52000000.00', '0.18', '9360000.00'),
-(6, 4, 3, '2021-11-10 22:00:00', NULL, NULL, NULL, '52000000.00', '0.18', '9360000.00');
+(45, 8, 1, '2001-01-20 09:00:00', '2002-01-20 09:00:00', '2012-01-20 09:00:00', NULL, '525.00', '0.18', '619.50'),
+(46, 9, 1, '2025-01-20 09:00:00', '2016-02-20 09:00:00', '2012-05-20 08:00:00', NULL, '5115.00', '0.18', '6035.70');
 
 --
 -- Триггеры `conn_steps`
 --
 DELIMITER //
 CREATE TRIGGER `tg_step_insert` BEFORE INSERT ON `conn_steps`
- FOR EACH ROW SET NEW.total = NEW.price*NEW.nalog
+ FOR EACH ROW SET NEW.total = NEW.price + (NEW.price*NEW.nalog)
+//
+DELIMITER ;
+DELIMITER //
+CREATE TRIGGER `tg_step_update` BEFORE UPDATE ON `conn_steps`
+ FOR EACH ROW SET NEW.total = NEW.price + (NEW.price*NEW.nalog)
 //
 DELIMITER ;
 
@@ -168,19 +175,15 @@ DELIMITER ;
 CREATE TABLE IF NOT EXISTS `conn_step_types` (
 `id` int(11) unsigned NOT NULL,
   `name` varchar(150) NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=7 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=10 ;
 
 --
 -- Дамп данных таблицы `conn_step_types`
 --
 
 INSERT INTO `conn_step_types` (`id`, `name`) VALUES
-(1, 'Видача технічних умов на приєднання'),
-(2, 'Приєднання до газорозподільних мереж (нестандартне)'),
-(4, 'Приєднання до газорозподільних мереж (стандартне)'),
-(5, 'Проведення пусконалагоджувальних робот'),
-(3, 'Проведення технічного нагляду за будівництвом інженерних систем та споруд'),
-(6, 'Проведення узгодження проектів пов’язаних з газифікацією');
+(8, 'Видача технічних умов на приєднання'),
+(9, 'Приєднання до газорозподільних мереж (стандартне)');
 
 --
 -- Indexes for dumped tables
@@ -202,7 +205,7 @@ ALTER TABLE `conn_contracts`
 -- Indexes for table `conn_messages`
 --
 ALTER TABLE `conn_messages`
- ADD PRIMARY KEY (`id`), ADD KEY `src_id` (`src_id`,`dest_id`), ADD KEY `dest_id` (`dest_id`), ADD KEY `message_type_id` (`message_type_id`);
+ ADD PRIMARY KEY (`id`), ADD KEY `message_type_id` (`message_type_id`), ADD KEY `src_id` (`src_id`);
 
 --
 -- Indexes for table `conn_message_types`
@@ -214,7 +217,7 @@ ALTER TABLE `conn_message_types`
 -- Indexes for table `conn_orders`
 --
 ALTER TABLE `conn_orders`
- ADD PRIMARY KEY (`id`), ADD KEY `client_id` (`client_id`,`contract_id`), ADD KEY `contract_id` (`contract_id`);
+ ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `order_number` (`order_number`), ADD KEY `contract_id` (`contract_id`), ADD KEY `client_id` (`client_id`);
 
 --
 -- Indexes for table `conn_steps`
@@ -246,7 +249,7 @@ MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2;
 -- AUTO_INCREMENT for table `conn_messages`
 --
 ALTER TABLE `conn_messages`
-MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=21;
+MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=20;
 --
 -- AUTO_INCREMENT for table `conn_message_types`
 --
@@ -256,17 +259,17 @@ MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=3;
 -- AUTO_INCREMENT for table `conn_orders`
 --
 ALTER TABLE `conn_orders`
-MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=5;
+MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=3;
 --
 -- AUTO_INCREMENT for table `conn_steps`
 --
 ALTER TABLE `conn_steps`
-MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=7;
+MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=47;
 --
 -- AUTO_INCREMENT for table `conn_step_types`
 --
 ALTER TABLE `conn_step_types`
-MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=7;
+MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=10;
 --
 -- Ограничения внешнего ключа сохраненных таблиц
 --
@@ -275,23 +278,21 @@ MODIFY `id` int(11) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=7;
 -- Ограничения внешнего ключа таблицы `conn_messages`
 --
 ALTER TABLE `conn_messages`
-ADD CONSTRAINT `conn_messages_ibfk_1` FOREIGN KEY (`src_id`) REFERENCES `conn_clients` (`id`),
-ADD CONSTRAINT `conn_messages_ibfk_2` FOREIGN KEY (`dest_id`) REFERENCES `conn_clients` (`id`),
-ADD CONSTRAINT `conn_messages_ibfk_3` FOREIGN KEY (`message_type_id`) REFERENCES `conn_message_types` (`id`);
+ADD CONSTRAINT `conn_messages_ibfk_1` FOREIGN KEY (`src_id`) REFERENCES `conn_clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT `conn_messages_ibfk_2` FOREIGN KEY (`message_type_id`) REFERENCES `conn_message_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `conn_orders`
 --
 ALTER TABLE `conn_orders`
-ADD CONSTRAINT `conn_orders_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `conn_clients` (`id`) ON UPDATE CASCADE,
-ADD CONSTRAINT `conn_orders_ibfk_2` FOREIGN KEY (`contract_id`) REFERENCES `conn_contracts` (`id`) ON UPDATE CASCADE;
+ADD CONSTRAINT `conn_orders_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `conn_clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+ADD CONSTRAINT `conn_orders_ibfk_2` FOREIGN KEY (`contract_id`) REFERENCES `conn_contracts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Ограничения внешнего ключа таблицы `conn_steps`
 --
 ALTER TABLE `conn_steps`
-ADD CONSTRAINT `conn_steps_ibfk_1` FOREIGN KEY (`step_type_id`) REFERENCES `conn_step_types` (`id`) ON UPDATE CASCADE,
-ADD CONSTRAINT `conn_steps_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `conn_orders` (`id`) ON UPDATE CASCADE;
+ADD CONSTRAINT `conn_steps_ibfk_1` FOREIGN KEY (`step_type_id`) REFERENCES `conn_step_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
