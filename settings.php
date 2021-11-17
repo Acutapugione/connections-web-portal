@@ -1,10 +1,12 @@
 <?php
 	require_once "functions.php"; 
-	
+	#var_dump($_POST);
+	#exit();
+	if( isset($_POST['isExit'])){
+		resetCurrSession();
+	}
 	if( isset($_SESSION['login']) &&
-		isset($_SESSION['password']) &&
-		isset($_SESSION['mail']) &&
-		isset($_SESSION['ipn'])
+		isset($_SESSION['password']) 
 	){
 		$_POST['client_id'] = getClientId($_SESSION['login'], $_SESSION['password']);
 		echo(HEAD_SETTINGS);

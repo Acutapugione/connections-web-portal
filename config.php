@@ -275,7 +275,7 @@
 										<a class="nav-link" href="#">Головна</a>
 									</li>
 									<li class="nav-item">
-										<a class="btn btn-primary ml-lg-2" href="\messager.php">Написати повідомлення</a>
+										<a class="btn btn-primary ml-lg-2" href="\messenger.php">Написати повідомлення</a>
 									</li>-->
 									<li class="nav-item">
 										<a class="btn btn-primary ml-lg-2" href="\signUp.php" type="button" class="btn btn-danger">Ще не реєструвалися?</a>
@@ -328,7 +328,7 @@
 										<a class="nav-link" href="#">Контакти</a>
 									</li>
 									<li class="nav-item">
-										<a class="btn btn-primary ml-lg-2" href="\messager.php">Написати повідомлення</a>
+										<a class="btn btn-primary ml-lg-2" href="\messenger.php">Написати повідомлення</a>
 									</li>-->
 									<li class="nav-item">
 										<a class="btn btn-primary ml-lg-2" href="\signIn.php" type="button" class="btn btn-danger">Вже зареєстровані?</a>
@@ -381,7 +381,7 @@
 										<a class="btn btn-primary ml-lg-2" href="#">Контакти</a>
 									</li>
 									<li class="nav-item">
-										<a class="btn btn-primary ml-lg-2" href="\messager.php">Написати повідомлення</a>
+										<a class="btn btn-primary ml-lg-2" href="\messenger.php">Написати повідомлення</a>
 									</li>-->
 								</ul>
 							</div>
@@ -430,7 +430,7 @@
 										<a class="btn btn-primary ml-lg-2" href="#">Контакти</a>
 									</li>
 									<li class="nav-item">
-										<a class="btn btn-primary ml-lg-2" href="\messager.php">Написати повідомлення</a>
+										<a class="btn btn-primary ml-lg-2" href="\messenger.php">Написати повідомлення</a>
 									</li>-->
 								</ul>
 							</div>
@@ -471,17 +471,24 @@
 							</button>
 
 							<div class="navbar-collapse collapse justify-content-end" id="navbarContent">
-								<ul class="navbar-nav ml-auto">
-									<!--<li class="nav-item active">
-										<a class="nav-link" href="#">Головна</a>
-									</li>-->
-									<li class="nav-item">
-										<a class="btn btn-primary ml-lg-2" href="\settings.php">Налаштування користувача</a>
-									</li>
-									<li class="nav-item">
-										<a class="btn btn-primary ml-lg-2" href="\messager.php">Написати повідомлення</a>
-									</li>
-								</ul>
+								
+									<ul class="navbar-nav ml-auto">
+										<!--<li class="nav-item active">
+											<a class="nav-link" href="#">Головна</a>
+										</li>-->
+										<li class="nav-item">
+											<a class="btn btn-primary ml-lg-6" href="\settings.php">Налаштування користувача</a>
+										</li>
+										<li class="nav-item">
+											<a class="btn btn-primary ml-lg-6" href="\messenger.php">Написати повідомлення</a>
+										</li>
+										<li class="nav-item">
+										<form  name="headerMenu" action="\settings.php" method="POST">
+											<button class="btn btn-primary ml-lg-3" href="\settings.php" name="isExit">Вихід</button>
+										</form>
+										</li>
+									</ul>
+								
 							</div>
 						</div>
 					</nav>

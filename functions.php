@@ -6,14 +6,87 @@
     require_once "db_worker.php";
 	
 	function resetCurrSession(){
-		/*session_regenerate_id();
-		session_unset($_SESSION);
-		unset($_POST);
-		header("Location: \signIn.php"); 
-		exit();*/
+		unset($_SESSION);
+		#echo sprintf('<br>%s<br>',$error_text);
 	}
+	
 	function refreshClientInfo($info){
 		return updateClientInfo($info);
+	}
+	function pushOrder($order){
+		return createOrder($order);
+	}
+	function pushStepType($step_type_name){
+		return insertStepType($step_type_name);
+	}
+	function createOrder(array $order){
+		if(
+		is_array($order) 
+		&& !empty($order)
+		&& isset($order['order_number']) 
+		&& ( isset($order['client_ipn']) or isset($order['contract_ipn']))
+		&& ( isset($order['steps']) && is_array($order['steps']) && !empty($order['steps'])	)	)
+		{
+			$order['order_id'] = selectOrderId($order['order_number']);
+			//Установим ИНН клиента
+			if(isset($order['client_ipn'])){
+				$client_ipn = $order['client_ipn'];					
+			} elseif (isset($order['contract_ipn'])){
+				$client_ipn = $order['contract_ipn'];
+			}
+			//Выбрать клиента по ИНН
+			$tmp = selectClient($client_ipn);
+			if(is_array($tmp) && !empty($tmp)){
+				$client_id = $tmp[0]['id'];
+			}
+			
+			if(isset($client_id)){//Если такой существует то подставить его ИД в заказ
+				$order['client_id'] = $client_id;
+			}
+			
+			
+			//Выбрать ИН контракта по ИНН 
+			$contract_id = selectContractId($client_ipn);
+			if(isset($contract_id) && !empty($contract_id)){//Если такой существует то подставить его ИД в заказ
+				$order['contract_id'] = $contract_id;
+			} 
+						
+			//Создаем заказ/Обновляем если есть
+			if(isset($order['order_id']) && updateOrder($order)){
+				echo '<br><strong>order updated</strong><br>';
+
+			} elseif (insertOrder($order)){
+				echo '<br><strong>order inserted</strong><br>';
+				$order['order_id'] = selectOrderId($order['order_number']);
+			}		
+
+			if(isset($order['order_id']) && !empty($order['steps']) && isset($order['steps'])){
+				#echo '<ul>';
+				foreach($order['steps'] as $step){
+					$step['order_id'] = $order['order_id'];
+					if(isset($step['step_type_name']) && isset($order['order_number'])){
+						$step['step_id']=selectStepId($step['step_type_name'], $order['order_number']);
+					}
+					if(isset($step['order_id'])){
+						//Создаем этап/Обновляем если есть 
+						if(isset($step['step_id'])  && $step['step_id']!=false && updateStep($step)){
+							echo sprintf('<ul><div><strong>step %s updated</strong></div>', $step['step_id']);
+							
+						} elseif(insertStep($step)){
+							$step['step_id']=selectStepId($step['step_type_name'], $order['order_number']);
+							echo sprintf('<ul><div><strong>step %s inserted</strong><br></div>', $step['step_id']);
+						}
+						
+						foreach($step as $key => $val){
+							echo sprintf('<li><strong>%s</strong> : %s</li>', $key, $val);
+						}
+					}
+					echo '</ul>';
+				}
+			}
+		} else {
+			var_dump($order);
+		}
 	}
 	function pushClient($info){
 		return insertClient($info);
@@ -24,8 +97,11 @@
 	function getClientMessageTypes($client=null){
 		return selectClientMessageTypes($client);
 	}
-	function getClientMessagesByType($client=null, $type=null){
-		return selectClientMessagesByType($client, $type);
+	function getClientDialogs($client=null){
+		return selectClientDialogs($client);
+	}
+	function getClientMessagesByType($client_id=null, $type_name=null){
+		return selectClientMessagesByType($client_id, $type_name);
 	}
 	function getMessageTypes(){
 		return selectMessageTypes();
@@ -55,7 +131,6 @@
 	}
 	function getClientIpn($login, $password){
 		$res = selectClientIpn($login, $password);
-		#var_dump($res);
 		if(is_array($res) && !empty($res)){
 			return $res[0]['ipn_key'];
 		} 
@@ -65,6 +140,13 @@
 		if(is_array($res) && !empty($res)){
 			return $res[0]['id'];
 		} 
+	}
+	function checkClient($uname, $pwd){
+		$tmp = getClientId($uname, $pwd);
+		if(!empty ($tmp)){
+			return true;
+		}
+		return false;
 	}
 	function getClientIdByIpn($ipn_key){
 		$res = selectClient($ipn_key);
@@ -106,8 +188,10 @@
 			);
 		return $statusIcon;
 	}
-	function showTable($table){
-		
+	function showTable($table, $btns=null){
+		if(isset($btns)){
+			$cntr = 0;
+		}
 		if(is_array($table) && !empty($table)){
 			$columns = array_keys($table[0]);
 			$elemClasses = [ 
@@ -134,13 +218,15 @@
 				$elemClasses['th']);
 				}
 			foreach($columns as $col){
+				
 				echo sprintf('
 					<th class="%s" scope="col">
-						%s
+						%s 
 					</th>', 
 					$elemClasses['th'],
-					$col
+					$col				
 				);
+			
 			}
 			echo ('
 				</tr>
@@ -156,10 +242,26 @@
 					if (DateTime::createFromFormat('Y-m-d H:i:s', $val)){		
 						$val = DateTime::createFromFormat('Y-m-d H:i:s', $val)->format('d.m.Y');
 					}
-					echo sprintf(
-					'<td class="%s">%s</td>',
-					$elemClasses['td'], $val
-					);
+					if(isset($btns)){
+						
+						echo sprintf(
+							'<td class="%s">
+								<div class="form-check">
+								  <input class="form-check-input" type="radio" name="inputRadio" id="inputTg%s" value="%s">
+								  <label class="form-check-label" for="inputTg%s">
+									%s
+								  </label>
+								</div>
+							</td>',
+							$elemClasses['td'], $cntr, $val, $cntr, $val
+							);
+							$cntr++;	
+					} else {
+						echo sprintf(
+						'<td class="%s">%s</td>',
+						$elemClasses['td'], $val
+						);
+					}
 				}
 				echo '</tr>';
 			}
@@ -173,67 +275,58 @@
 	function showClientDialogs($client_ipn=null, $client=null){
 		if (!empty($client_ipn)) {
 			$client_id = getClientIdByIpn($client_ipn);
-			
-			if(!empty($client_id)){
-				$cntr = 0;
-				$expanded = "true";
-				$collapsed = "";
-				$show = "show";
+			$cntr = 0;
+			$expanded = "true";
+			$collapsed = "";
+			$show = "show";
+			if (!empty($client_id)){
 				$tmp = getClientMessageTypes($client_id);
-				
-				foreach($tmp as $dialog){
-					
-					foreach($dialog as $key => $val){
-						
-						$res = getClientMessagesByType($client_id, $val);
-						
-						if (is_array($res) && !empty($res)){
-							$cntr++;
-							if($cntr>1){ 
-								$expanded = "false";
-								$collapsed = "collapsed";
-								$show = "";
-							}
-							echo sprintf('
-							<div class="card">
-								<div class="card-header" id="messageHeading%s">
-								  <h2 class="mb-0">
-									<button class="btn btn-primary %s" type="button" data-toggle="collapse" data-target="#messageCollapse%s" aria-expanded="%s" aria-controls="messageCollapse%s">
-										%s
-									</button>
-								  </h2>
+				if (is_array($tmp) && !empty($tmp)){
+					foreach($tmp as $type){
+						foreach($type as $key => $val){
+							$messages = getClientMessagesByType($client_id, $val);
+							if(is_array($messages) && !empty($messages)){
+								$cntr++;
+								if($cntr>1){ 
+									$expanded = "false";
+									$collapsed = "collapsed";
+									$show = "";
+								}
+								echo sprintf('
+									<div class="card">
+										<div class="card-header" id="messHeading%s">
+										  <h2 class="mb-0">
+											<button class="btn btn-primary %s" type="button" data-toggle="collapse" data-target="#messCollapse%s" aria-expanded="%s" aria-controls="messCollapse%s">
+											
+												%s
+											</button>
+										  </h2>
+										</div>
+										<div id="messCollapse%s" class="collapse %s" aria-labelledby="messHeading%s" data-parent="#accordionExample1">
+										  <div class="card-body">
+											', $cntr, $collapsed, $cntr, $expanded, $cntr, $key.' - '.$val, $cntr, $show, $cntr
+								);
+								showClientMessages($client_id, $val);
+								echo ('
 								</div>
-								<div id="messageCollapse%s" class="collapse %s" aria-labelledby="messageHeading%s" data-parent="#accordionExample1 #tab2">
-								  <div class="card-body">
-									', $cntr, $collapsed, $cntr, $expanded, $cntr, $key.' - '.$val, $cntr, $show, $cntr);
-							showClientMessages($client_id, $val);
-							echo ('
-							</div>
-							</div>
-							</div>');
-						} else {
-							echo '<div class="alert alert-danger alert-dismissible fade show">Повідомлення відсутні</div>';
+								</div>
+								</div>'
+								); 	
+							}
 						}
 					}
+				} else {
+					echo '<div class="alert alert-warning alert-dismissible fw-5 fade show">
+						<a href="\messenger.php" type="button" class="btn btn-warning">Написати повідомлення</a>
+						<strong>Увага!</strong> Наразі відсутні повідомлення.
+					  </div>';
 				}
 			} else {
-				echo sprintf('<div class="alert alert-danger alert-dismissible  fw-5  fade show text-danger">
-								<a href="\settings.php" type="button" class="btn btn-danger">Редагувати налаштування</a>
-								<strong>Увага!</strong> Відсутня інформація за цим ІПН: %s
-							</div>',
-							$client_ipn);
+				echo '<div class="alert alert-danger alert-dismissible fw-5 fade show">
+						<a href="\settings.php" type="button" class="btn btn-danger">Редагувати налаштування</a>
+						<strong>Увага!</strong> Наразі відсутні данні по Вашому ІПН.
+					  </div>';
 			}
-		} elseif (!empty($client_id)){
-			$tmp = getClientMessageTypes($client_id);
-			foreach($tmp as $type){
-				showClientMessages($type);
-			}
-			showTable($tmp);
-		} else {
-			echo '<div class="alert alert-danger alert-dismissible fw-5 fade show text-danger">
-					<a href="\settings.php" type="button" class="btn btn-danger">Редагувати налаштування</a>
-					<strong>Увага!</strong> Наразі відсутні данні по Вашому ІПН.
-				  </div>';
 		}
 	}
 	function showClientOrders($client_ipn=null, $client_id=null){
@@ -245,54 +338,61 @@
 			$show = "show";
 			if(!empty($client_id)){
 				$tmp = getClientOrders($client_id);
-				
-				foreach($tmp as $order){
-					foreach($order as $key => $val){
-						$res = getOrderSteps($val);
+				if (is_array($tmp) && !empty($tmp)){
+					foreach($tmp as $order){
+						foreach($order as $key => $val){
+							$res = getOrderSteps($val);
 
-						if (is_array($res) && !empty($res)){
-							$cntr++;
-							if($cntr>1){ 
-								$expanded = "false";
-								$collapsed = "collapsed";
-								$show = "";
-							}
-							echo sprintf('
-							<div class="card">
-								<div class="card-header" id="orderHeading%s">
-								  <h2 class="mb-0">
-									<button class="btn btn-primary %s" type="button" data-toggle="collapse" data-target="#orderCollapse%s" aria-expanded="%s" aria-controls="orderCollapse%s">
-									
-										%s
-									</button>
-								  </h2>
+							if (is_array($res) && !empty($res)){
+								$cntr++;
+								if($cntr>1){ 
+									$expanded = "false";
+									$collapsed = "collapsed";
+									$show = "";
+								}
+								echo sprintf('
+								<div class="card">
+									<div class="card-header" id="orderHeading%s">
+									  <h2 class="mb-0">
+										<button class="btn btn-primary %s" type="button" data-toggle="collapse" data-target="#orderCollapse%s" aria-expanded="%s" aria-controls="orderCollapse%s">
+										
+											%s
+										</button>
+									  </h2>
+									</div>
+									<div id="orderCollapse%s" class="collapse %s" aria-labelledby="orderHeading%s" data-parent="#accordionExample1">
+									  <div class="card-body">
+										', $cntr, $collapsed, $cntr, $expanded, $cntr, $key.' - '.$val, $cntr, $show, $cntr);
+								showOrderSteps($val);
+								echo ('
 								</div>
-								<div id="orderCollapse%s" class="collapse %s" aria-labelledby="orderHeading%s" data-parent="#accordionExample1">
-								  <div class="card-body">
-									', $cntr, $collapsed, $cntr, $expanded, $cntr, $key.' - '.$val, $cntr, $show, $cntr);
-							showOrderSteps($val);
-							echo ('
-							</div>
-							</div>
-							</div>'); 			
-						}
-					}	
+								</div>
+								</div>'); 			
+							}
+						}	
+					}
+				} else {
+					echo '<div class="alert alert-warning alert-dismissible fw-5 fade show">
+						<a href="\settings.php" type="button" class="btn btn-warning">Редагувати налаштування</a>
+						<strong>Увага!</strong> Наразі відсутні замовлення по Вашому ІПН.
+					  </div>';
 				}
 			} else {
-				echo sprintf('<div class="alert alert-danger alert-dismissible  fw-5  fade show text-danger">
-								<a href="\settings.php" type="button" class="btn btn-danger">Редагувати налаштування</a>
+				echo sprintf('<div class="alert alert-warning alert-dismissible  fw-5  fade show">
+								<a href="\settings.php" type="button" class="btn btn-warning">Редагувати налаштування</a>
 								<strong>Увага!</strong> Відсутня інформація за цим ІПН: %s
 							</div>',
 							$client_ipn);
 			}
         } elseif (!empty($client_id)){
 			$tmp = getClientOrders($client_id);
+			
 			foreach($tmp as $order){
 				showOrderSteps($order);
 			}
 			showTable($tmp);
 		} else {
-			echo '<div class="alert alert-danger alert-dismissible fw-5 fade show text-danger">
+			echo '<div class="alert alert-danger alert-dismissible fw-5 fade show">
 					<a href="\settings.php" type="button" class="btn btn-danger">Редагувати налаштування</a>
 					<strong>Увага!</strong> Наразі відсутні данні по Вашому ІПН.
 				  </div>';
@@ -317,6 +417,16 @@
 			}
 		}
 		return false;
-	}
+	}/*
+	function showDialogMessages($client=null,  $dialog_id=null){
+		if(!empty($client) && !empty($dialog_id)) {
+			$tmp = getClientMessagesByDialog($client, $dialog_id);
+			if(is_array($tmp) && !empty($tmp)){
+				showTable($tmp);
+				return true;
+			}
+		}
+		return false;
+	}*/
 
 ?>
