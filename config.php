@@ -1,212 +1,38 @@
 <?php
-	define('DATA_BASE',	'acuta');
-	define('LOGIN',	'acuta');
-	define('PASSWORD',	'acuta');
+	define('LOCAL_1C', "{your 1c html service local address}");
+	define('OUTER_1C', "{your 1c html service address}");
+	define('TEST_1C',  "{your 1c html service test address}");
+	
+	define('DOCS_1C_POST_APPEAL', "{your 1c html service address for post appeals}");
+	define('DOCS_1C_GET_APPEAL', "{your 1c html service address for get appeals}");
+	
+	define('DATA_BASE',	'{your db name}');
+	define('LOGIN',	'{your login}');
+	define('PASSWORD',	'{your password}');
+	
 	define('PORT',	'3306');
     define('AP_PORT', '80');
     
 	define('ADDRESS',	'127.0.0.1');
 	define('HOST',	ADDRESS.':'.PORT);
 	define('AP_HOST', ADDRESS.':'.AP_PORT);	
-	#echo sprintf('<div>HOST: %s</div><div>LOGIN: %s</div><div>PASSWORD: %s</div>', HOST, LOGIN, PASSWORD);
+	
     $GLOBALS['CONNECTION'] = mysqli_connect(HOST, LOGIN, PASSWORD);
 	
-    define('CHAR_SET',		"default charset='utf8'");
+    define('CHAR_SET',"default charset='utf8'");
+	
 	if(!empty($GLOBALS['CONNECTION'])){
         define('SELECT_DB',	mysqli_select_db($GLOBALS['CONNECTION'], DATA_BASE));
     }
 	$GLOBALS['ICONS']= [
 		'success'=> 'img/pngwing1.png', 
 		'unCompleted'=> 'img/pngwing2.png', 
-		'unPayed'=> 'img/pngwing3.png'
+		'unPayed'=> 'img/pngwing3.png',
+		'edit' => 'img/green_edit_pencil.png',
+		'delete' => 'img/red_delete_ico.png',
 		];
-	$GLOBALS['TABLES']= [
-	[
-	'name'=>'conn_clients', 
-	'fields'=> [
-		[ 
-		'name' => 'id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'name',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'login',
-		'type' => 'varchar(50)',
-		'params'=> 'NOT NULL',
-		],
-		[ 
-		'name' => 'password',
-		'type' => 'varchar(50)',
-		'params'=> 'NOT NULL',
-		],
-		[ 
-		'name' => 'mail',
-		'type' => 'varchar(50)',
-		'params'=> 'NOT NULL',
-		],
-		[ 
-		'name' => 'ipn_key',
-		'type' => 'varchar(50)',
-		'params'=> 'NOT NULL',
-		],
-		]
-	],
-	[
-	'name'=>'conn_contracts',
-	'fields'=> [
-		[ 
-		'name' => 'id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'ipn_key',
-		'type' => 'varchar(50)',
-		'params'=> 'NOT NULL',
-		],
-		]
-	],
-	[
-	'name'=>'conn_orders',
-	'fields'=> [
-		[ 
-		'name' => 'id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'order_number',
-		'type' => 'varchar(50)',
-		'params'=> 'NOT NULL',
-		],
-		[ 
-		'name' => 'client_id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED DEFAULT NULL',
-		],
-		[ 
-		'name' => 'contract_id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED DEFAULT NULL',
-		],
-		]
-	],
-	[
-	'name'=>'conn_steps',
-	'fields'=> [
-		[ 
-		'name' => 'id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'step_type_id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL DEFAULT 1',
-		],
-		[ 
-		'name' => 'order_id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'created_at',
-		'type' => 'timestamp',
-		'params'=> 'NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()',
-		],
-		[ 
-		'name' => 'payed_at',
-		'type' => 'timestamp',
-		'params'=> 'NULL DEFAULT NULL',
-		],
-		[ 
-		'name' => 'completed_at',
-		'type' => 'timestamp',
-		'params'=> 'NULL DEFAULT NULL',
-		],
-		[ 
-		'name' => 'deleted_at',
-		'type' => 'timestamp',
-		'params'=> 'NULL DEFAULT NULL',
-		],
-		[ 
-		'name' => 'price',
-		'type' => 'decimal(10,2)',
-		'params'=> 'UNSIGNED NOT NULL DEFAULT 0.00',
-		],
-		[ 
-		'name' => 'nalog',
-		'type' => 'decimal(10,2)',
-		'params'=> 'UNSIGNED NOT NULL DEFAULT 0.00',
-		],
-		[ 
-		'name' => 'total',
-		'type' => 'decimal(10,2)',
-		'params'=> 'UNSIGNED DEFAULT NULL',
-		],
-		]
-	],
-	[
-	'name'=>'conn_step_types',
-	'fields'=> [
-		[ 
-		'name' => 'id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'name',
-		'type' => 'varchar(50)',
-		'params'=> 'NOT NULL',
-		],
-		]
-	],
-	[
-	'name'=>'conn_step_messages',
-	'fields'=> [
-		[ 
-		'name' => 'id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'src_id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'dest_id',
-		'type' => 'int(11)',
-		'params'=> 'UNSIGNED NOT NULL',
-		],
-		[ 
-		'name' => 'mess_tittle',
-		'type' => 'varchar(150)',
-		'params'=> 'NOT NULL',
-		],
-		[ 
-		'name' => 'mess_ctx',
-		'type' => 'varchar(300)',
-		'params'=> 'NOT NULL',
-		],
-		[ 
-		'name' => 'created_at',
-		'type' => 'timestamp',
-		'params'=> 'NOT NULL DEFAULT current_timestamp()',
-		],
-		[ 
-		'name' => 'deleted_at_at',
-		'type' => 'timestamp',
-		'params'=> 'DEFAULT NULL',
-		],
-		]
-	],
-	];
+	
+	/***Typical example***/
 	
 	define('FOOTER', ('
 			<footer class="page-footer">
@@ -243,6 +69,7 @@
 		<script src="js/jquery.min.js"></script>
 		<script src="js/bootstrap.js"></script>
 		<script src="js/script.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 		</body>
 	</html>'));
 	define('HEAD_SIGN_IN', ('
@@ -333,7 +160,11 @@
 									<li class="nav-item">
 										<a class="btn btn-primary ml-lg-2" href="\signIn.php" type="button" class="btn btn-danger">Вже зареєстровані?</a>
 									</li>
-									
+									<!--<li class="nav-item">
+										<form  name="headerMenu" action="" method="POST">
+											<button class="btn btn-primary ml-lg-3" href="" name="isExit">Вихід</button>
+										</form>
+									</li>-->
 								</ul>
 							</div>
 						</div>
@@ -483,8 +314,8 @@
 											<a class="btn btn-primary ml-lg-6" href="\messenger.php">Написати повідомлення</a>
 										</li>
 										<li class="nav-item">
-										<form  name="headerMenu" action="\settings.php" method="POST">
-											<button class="btn btn-primary ml-lg-3" href="\settings.php" name="isExit">Вихід</button>
+										<form  name="headerMenu" action="" method="POST">
+											<button class="btn btn-primary ml-lg-3" href="" name="isExit">Вихід</button>
 										</form>
 										</li>
 									</ul>
