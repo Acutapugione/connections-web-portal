@@ -1,38 +1,46 @@
 <?php 
+	
 	require_once "functions.php"; 
-		
-	if(!isset($_SESSION['login']) or !isset($_SESSION['password'])){
-		if(!empty($_POST) && !empty($_POST['uname']) && !empty($_POST['pswd'])){
-			$_SESSION['login'] = $_POST['uname'];
+	
+	if( isset($_POST['isExit'])){
+		resetCurrSession();
+	}
+	if(!isset($_SESSION['mail']) or !isset($_SESSION['password'])){
+		if(!empty($_POST) && !empty($_POST['email']) && !empty($_POST['pswd'])){
+			$_SESSION['mail'] = $_POST['email'];
 			$_SESSION['password'] = $_POST['pswd'];
 			if(isset($_POST['signUpBtn'])){
 				$params = [
-					'login' => $_POST['uname'],
+					
 					'password' => $_POST['pswd'],
 					'mail' => $_POST['email'],
-					'ipn_key' => $_POST['ipnKey'],
+					
 				];
 				
-				pushClient($params);
+				
 				$_POST['signUpBtn'] = null;
-			}
+			} 
 		} else {
+			resetCurrSession();
 			header("Location: \signIn.php"); 
 			exit();
 		}
-	} else if (!checkClient($_SESSION['login'], $_SESSION['password'])){
+	} else if (!checkClient($_SESSION['mail'], $_SESSION['password'])){
+		echo "Not checked";
 		resetCurrSession();
 		header("Location: \signIn.php"); 
 		exit();
 	}
-	
-	#$ipn_key = getClientIpn($_SESSION['login'], $_SESSION['password']);//'123456789';
-	$_SESSION['ipn'] =  getClientIpn($_SESSION['login'], $_SESSION['password']);
-	
-	$_SESSION['mail'] = getClientMail($_SESSION['login'], $_SESSION['password']);
+
+	refreshOrders();
 	echo(HEAD);
 	
-	echo ('
+	$html_string = '';
+	$tempCount = getCountUnreadMessagesToClient($_SESSION['mail'], $_SESSION['password']);
+	if(!empty($tempCount) && $tempCount>0){
+		$html_string = sprintf('<span class="badge badge-info">%s</span>', $tempCount);
+	}
+	echo sprintf('
 		<div class="container">
 			
 			<ul class="nav nav-tabs nav-fill">
@@ -43,14 +51,18 @@
 					<a class="nav-link active" data-toggle="tab" href="#tab1">Замовлення</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" data-toggle="tab" href="#tab2">Повідомлення</a>
+					<a class="nav-link" data-toggle="tab" href="#tab2">Повідомлення %s</a> 
 				</li>
 			</ul>
 			<div class="tab-content" id="accordionExample1">
 				<div class="tab-pane fade show active" id="tab1">
-			');
-	showClientOrders($_SESSION['ipn']);
-
+			', $html_string );
+	showClientContracts();
+    
+	#showClientContracts($_SESSION['mail'], $_SESSION['password']);
+	echo('<p class="fw-3 fade show text-center">Для відображення інформації по приєднанням необхідно додати до свого кабінету контракт із <strong>Вашим індивідуальним податковим номером</strong>.</p><div class="text-center d-block ">
+			<a class="btn btn-primary w-50 m-2" name="add_contract" href="\contracts_manager.php">Додати новий контракт</a> 
+			</div>');
 	echo('
 		<div class="divider mx-auto"></div>
 		<div class="row">
@@ -64,8 +76,9 @@
 		</div>
 	</div>
 	<div class="tab-pane fade" id="tab2">');
-			
-	showClientDialogs($_SESSION['ipn']);//'123456789'
+	showAppeals();		
+	#showClientDialogs($_SESSION['mail'], $_SESSION['password']);//'123456789'
+	
 	
 	echo ('
 		</div>

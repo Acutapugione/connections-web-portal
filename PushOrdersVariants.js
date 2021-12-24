@@ -26,6 +26,7 @@
 
 /* Вариант № 2 */
 [
+{
 	 "order_number" 	=> "12356",
 	 "client_ipn"   	=> "25125125125",
 	 "contract_ipn" 	=> 0,
@@ -47,5 +48,31 @@
 		"nalog"				=> 18	 
 		]
 	 ]
+},
+
 ];
-			
+
+[
+{
+"order_number": 86370,
+"client_ipn": "2325309266",
+"steps": [
+{
+"step_type_name": "Послуга з видачі технічних умов на підключення",
+"step_type_key1C": "",
+"created_at": "",
+"payed_at": "",
+"completed_at": "",
+"price": "",
+	},
+{
+"step_type_name": "Послуга з надання інших видів робіт",
+"step_type_key1C": "",
+"created_at": "",
+"payed_at": "",
+"completed_at": "",
+"price": "",
+	},
+	]
+}
+]
